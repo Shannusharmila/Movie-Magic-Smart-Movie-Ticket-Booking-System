@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}TamilTix{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+{% if session.user_email %}
+<nav class="nav">
+  <a href="{{ url_for('home') }}" class="nav-logo">Tamil<span>Tix</span></a>
+  <div class="nav-right">
+    <span class="nav-user">👤 {{ session.user_name.split()[0] }}</span>
+    <a href="{{ url_for('home') }}"        class="nbtn">Browse</a>
+    <a href="{{ url_for('my_bookings') }}" class="nbtn">My Tickets</a>
+    <a href="{{ url_for('logout') }}"      class="nbtn red">Sign Out</a>
+  </div>
+</nav>
+{% else %}
+<nav class="nav">
+  <a href="{{ url_for('index') }}" class="nav-logo">Tamil<span>Tix</span></a>
+  <div class="nav-right">
+    <a href="{{ url_for('login') }}"    class="nbtn">Sign In</a>
+    <a href="{{ url_for('register') }}" class="nbtn hot">Get Started</a>
+  </div>
+</nav>
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-wrap">
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

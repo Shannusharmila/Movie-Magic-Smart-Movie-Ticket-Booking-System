@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}TamilTix — Tamil Cinema Tickets{% endblock %}
+{% block content %}
+<div class="landing">
+  <div class="land-tag">🔴 Now Showing · Tamil Nadu</div>
+  <h1 class="land-h">BOOK YOUR<br><span class="acc">SEAT.</span>
+    <span class="land-sub">The finest Tamil cinema, at your fingertips</span>
+  </h1>
+  <p class="land-p">Real-time seat selection, instant digital tickets, and the freshest Tamil film lineup — all in one place.</p>
+  <div class="land-cta">
+    <a href="{{ url_for('register') }}" class="btn btn-red btn-lg">Book Tickets →</a>
+    <a href="{{ url_for('login') }}"    class="btn btn-ghost btn-lg">Sign In</a>
+  </div>
+  <div class="land-stats">
+    <div class="stat"><div class="sn">10+</div><div class="sl">New Films</div></div>
+    <div class="stat"><div class="sn">200+</div><div class="sl">Theatres</div></div>
+    <div class="stat"><div class="sn">12</div><div class="sl">Cities</div></div>
+    <div class="stat"><div class="sn">4.9★</div><div class="sl">Rating</div></div>
+  </div>
+</div>
+<div class="feats">
+  <div class="fc"><div class="fi">🎭</div><h3>Live Seat Maps</h3><p>Real-time seat selection — see what's available before you book.</p></div>
+  <div class="fc"><div class="fi">⚡</div><h3>Instant Tickets</h3><p>Booking confirmed in seconds. Digital ticket ready to scan at the gate.</p></div>
+  <div class="fc"><div class="fi">🔒</div><h3>Secure Payments</h3><p>UPI, Cards, Net Banking — every transaction secured via AWS.</p></div>
+  <div class="fc"><div class="fi">📧</div><h3>Email Confirmation</h3><p>Instant booking confirmation delivered to your inbox via AWS SNS.</p></div>
+</div>
+{% endblock %}

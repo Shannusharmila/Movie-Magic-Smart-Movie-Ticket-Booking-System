@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Booking Confirmed — TamilTix{% endblock %}
+{% block content %}
+<div class="tk-page">
+  <div class="tk-top">
+    <span class="tk-emoji">🎉</span>
+    <h1 class="tk-h">BOOKING <span>CONFIRMED!</span></h1>
+    <p class="tk-p">Confirmation sent to <strong>{{ booking.attendee_email }}</strong>. Enjoy the show!</p>
+  </div>
+
+  <div class="ticket">
+    <div class="tkt-head">
+      <div class="tkt-img">
+        <img src="{{ booking.poster }}" alt="{{ booking.movie_name }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="tkfb" style="display:none">{{ booking.movie_name[:2].upper() }}</div>
+      </div>
+      <div class="tkt-title">
+        <div class="tkt-movie">{{ booking.movie_name }}</div>
+        <div class="tkt-theater">{{ booking.theater }}</div>
+      </div>
+      <div class="tkt-id">
+        <div class="tkt-idl">Booking ID</div>
+        <div class="tkt-idv">{{ booking.booking_id }}</div>
+      </div>
+    </div>
+
+    <div class="tkt-body">
+      <div class="tkt-grid">
+        <div class="tkf"><div class="tkfl">Date</div><div class="tkfv">{{ booking.show_date }}</div></div>
+        <div class="tkf"><div class="tkfl">Showtime</div><div class="tkfv">{{ booking.show_time }}</div></div>
+        <div class="tkf"><div class="tkfl">Booked By</div><div class="tkfv">{{ booking.attendee_name }}</div></div>
+        <div class="tkf"><div class="tkfl">Mobile</div><div class="tkfv">{{ booking.attendee_mobile }}</div></div>
+        <div class="tkf tks-row">
+          <div class="tkfl">Seats</div>
+          <div class="tks">{% for s in booking.seats %}<span class="tkseat">{{ s }}</span>{% endfor %}</div>
+        </div>
+        <div class="tkf">
+          <div class="tkfl">Payment</div>
+          <div class="tkfv">
+            {% set pm={'upi':'UPI / GPay','card':'Card','net':'Net Banking','wallet':'Wallet','counter':'Cash at Counter'} %}
+            {{ pm.get(booking.payment_method, booking.payment_method) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tkt-div"></div>
+
+    <div class="tkt-foot">
+      <div>
+        <div class="tkt-al">Base + Fee + GST</div>
+        <div style="font-size:.75rem;color:var(--sub)">₹{{ booking.base_amount }} + ₹{{ booking.conv_fee }} + ₹{{ booking.gst }}</div>
+      </div>
+      <div class="tkt-av">₹{{ booking.total_amount }}</div>
+    </div>
+
+    <div class="tkt-notice">
+      Present this ticket at the entrance. Carry a valid photo ID. Arrive 15 minutes early. No refunds after booking.
+    </div>
+  </div>
+
+  <div class="tk-acts">
+    <button class="btn btn-ghost" onclick="window.print()">🖨 Print Ticket</button>
+    <a href="{{ url_for('home') }}"        class="btn btn-ghost">← Browse More</a>
+    <a href="{{ url_for('my_bookings') }}" class="btn btn-ghost">My Tickets</a>
+  </div>
+</div>
+{% endblock %}

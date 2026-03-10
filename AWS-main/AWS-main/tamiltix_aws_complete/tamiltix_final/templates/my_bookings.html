@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My Tickets — TamilTix{% endblock %}
+{% block content %}
+<div class="msec">
+  <div class="mhd">
+    <div class="mhd-t">MY TICKETS</div>
+    <a href="{{ url_for('home') }}" class="btn btn-ghost btn-sm">← Browse Films</a>
+  </div>
+
+  {% if bookings %}
+  <div class="bklist">
+    {% for b in bookings %}
+    <div class="bkcard">
+      <div class="bkc-img">
+        <img src="{{ b.poster }}" alt="{{ b.movie_name }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="bkfb" style="display:none">{{ b.movie_name[:2].upper() }}</div>
+      </div>
+      <div class="bkc-info">
+        <div class="bkc-title">{{ b.movie_name }}</div>
+        <div class="bkc-meta">{{ b.theater }}</div>
+        <div class="bkc-meta">📅 {{ b.show_date }} &nbsp;⏰ {{ b.show_time }}</div>
+        <div class="bkc-seats">{% for s in b.seats %}<span class="tkseat">{{ s }}</span>{% endfor %}</div>
+      </div>
+      <div class="bkc-right">
+        <div class="bkc-id">{{ b.booking_id }}</div>
+        <div class="bkc-amt">₹{{ b.total_amount }}</div>
+        <div class="bkc-status">✓ Confirmed</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="nores">
+    <div class="noi">🎫</div>
+    <p>No bookings yet. <a href="{{ url_for('home') }}">Browse films →</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

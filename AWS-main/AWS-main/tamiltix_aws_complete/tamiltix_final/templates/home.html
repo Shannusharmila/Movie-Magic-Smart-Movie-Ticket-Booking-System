@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Browse Films — TamilTix{% endblock %}
+{% block content %}
+
+<div class="hbanner">
+  <div class="hb-top">
+    <div class="hb-greet">
+      <small>Good to see you,</small>
+      <strong>{{ session.user_name.split()[0] }}</strong> 👋
+      <span class="hb-hi">What's showing today?</span>
+    </div>
+    <div class="hb-badge">🎟 Login #<strong>{{ session.login_count }}</strong> &nbsp;·&nbsp; <strong>{{ session.user_city }}</strong></div>
+  </div>
+  <form method="GET" action="{{ url_for('home') }}" class="fbar">
+    <div class="fi-wrap"><span>🔍</span><input type="text" name="q" value="{{ filter_q }}" placeholder="Search movies, cast..."></div>
+    <select name="genre" onchange="this.form.submit()">
+      <option value="">All Genres</option>
+      {% for g in genres %}<option value="{{ g }}" {% if filter_genre==g %}selected{% endif %}>{{ g }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-red btn-sm">Search</button>
+  </form>
+  <div class="chips">
+    <a href="{{ url_for('home') }}" class="chip {% if not filter_genre %}on{% endif %}">All</a>
+    {% for g in genres %}<a href="{{ url_for('home', genre=g) }}" class="chip {% if filter_genre==g %}on{% endif %}">{{ g }}</a>{% endfor %}
+  </div>
+</div>
+
+<div class="msec">
+  <div class="mhd">
+    <div class="mhd-t">NOW SHOWING</div>
+    <div class="mhd-c">{{ movies|length }} film{{ 's' if movies|length!=1 }}</div>
+  </div>
+
+  {% if movies %}
+  <div class="mgrid">
+    {% for m in movies %}
+    <div class="mcard" data-genre="{{ m.genre }}">
+      <a href="{{ url_for('book', movie_id=m.id) }}" class="mcard-a">
+
+        <div class="mposter">
+          <img
+            class="poster-img"
+            src="{{ m.poster_local }}"
+            data-src1="{{ m.poster }}"
+            data-src2="{{ m.poster_alt }}"
+            data-src3="{{ m.poster_local }}"
+            alt="{{ m.name }} poster"
+            loading="{{ 'eager' if loop.index <= 4 else 'lazy' }}"
+            decoding="async"
+          >
+          <div class="pov-bottom"></div>
+          <div class="pov-top"></div>
+          <div class="ptag">{{ m.genre }}</div>
+          <div class="prat">★ {{ m.rating }}</div>
+          <div class="phover-title">
+            <div class="pht-name">{{ m.name }}</div>
+            <div class="pht-cast">{{ m.cast.split(',')[0] }}</div>
+          </div>
+        </div>
+
+        <div class="minfo">
+          <div class="mname">{{ m.name }} <span class="myear">({{ m.year }})</span></div>
+          <div class="mlang">{{ m.lang }} · {{ m.duration }}</div>
+          <div class="mfoot">
+            <span class="mprice">from ₹{{ m.price }}</span>
+            <span class="mbtn">Book Now →</span>
+          </div>
+        </div>
+
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="nores"><div class="noi">🎭</div><p>No films found. <a href="{{ url_for('home') }}">Clear filters</a></p></div>
+  {% endif %}
+</div>
+
+<script>
+// Smart poster loader: local → TMDB → Wikipedia
+// Local file is always present so cards never show broken images
+(function() {
+  document.querySelectorAll('.poster-img').forEach(function(img) {
+    var srcs = [
+      img.getAttribute('data-src1'),   // TMDB (best quality)
+      img.getAttribute('data-src2'),   // Wikipedia (backup)
+      img.getAttribute('data-src3'),   // Local file (always works)
+    ].filter(Boolean);
+    var idx = 0;
+
+    // Try TMDB immediately (upgrade if internet available)
+    var probe = new Image();
+    probe.onload = function() {
+      img.src = srcs[0];  // TMDB loaded — use real poster
+    };
+    probe.onerror = function() {
+      // TMDB failed — try Wikipedia
+      var probe2 = new Image();
+      probe2.onload = function() { img.src = srcs[1]; };
+      // Wikipedia failed too — keep local (already set as src)
+      if (srcs[1]) probe2.src = srcs[1];
+    };
+    if (srcs[0]) probe.src = srcs[0];
+  });
+})();
+</script>
+
+{% endblock %}

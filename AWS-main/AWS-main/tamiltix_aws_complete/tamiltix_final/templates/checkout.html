@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Checkout — TamilTix{% endblock %}
+{% block content %}
+<div class="co-wrap">
+  <div>
+    <h1 class="co-h">SECURE CHECKOUT</h1>
+    <p class="co-sub">Fill your details to confirm the booking</p>
+
+    <form method="POST" action="{{ url_for('confirm') }}">
+      <!-- Attendee Details -->
+      <div class="cfg">
+        <div class="cfg-t">📋 Attendee Details</div>
+        <div class="fstack">
+          <div class="fg2">
+            <div class="f"><label>Full Name</label>
+              <input type="text" name="name" required placeholder="As per ID" value="{{ session.user_name }}">
+            </div>
+            <div class="f"><label>Age</label>
+              <input type="number" name="age" required placeholder="25" min="5" max="99">
+            </div>
+          </div>
+          <div class="fg2">
+            <div class="f"><label>Email</label>
+              <input type="email" name="email" required value="{{ session.user_email }}" placeholder="Ticket sent here">
+            </div>
+            <div class="f"><label>Mobile</label>
+              <input type="tel" name="mobile" required placeholder="+91 XXXXX XXXXX">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div class="cfg">
+        <div class="cfg-t">💳 Payment Method</div>
+        <div class="pmlist">
+          {% for val,icon,lbl,sub in [
+            ('upi','📱','UPI / GPay / PhonePe','Instant, no extra charges'),
+            ('card','💳','Credit / Debit Card','Visa, Mastercard, RuPay'),
+            ('net','🏦','Net Banking','All major Indian banks'),
+            ('wallet','👛','Paytm / Amazon Pay','Use your wallet balance'),
+            ('counter','🏧','Pay at Box Office','Cash at theatre counter')
+          ] %}
+          <label class="pm {% if val=='upi' %}sel{% endif %}"
+                 onclick="document.querySelectorAll('.pm').forEach(p=>p.classList.remove('sel'));this.classList.add('sel')">
+            <span class="pm-icon">{{ icon }}</span>
+            <div><div class="pm-lbl">{{ lbl }}</div><div class="pm-sub">{{ sub }}</div></div>
+            <input type="radio" name="payment" value="{{ val }}" {% if val=='upi' %}checked{% endif %}
+                   style="display:none">
+            <div class="pm-dot"></div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-red btn-lg btn-full">
+        🔒 Confirm & Pay ₹{{ pricing.total }}
+      </button>
+    </form>
+  </div>
+
+  <!-- Order Summary -->
+  <div class="opanel">
+    <div class="opt">Order Summary</div>
+    <div class="omini">
+      <div class="omini-img">
+        <img src="{{ draft.poster }}" alt="{{ draft.movie_name }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="ofb" style="display:none">{{ draft.movie_name[:2].upper() }}</div>
+      </div>
+      <div>
+        <div class="omini-name">{{ draft.movie_name }}</div>
+        <div class="omini-meta">{{ draft.theater }}<br>{{ draft.show_date }}, {{ draft.show_time }}</div>
+      </div>
+    </div>
+    <div class="bdiv"></div>
+    <div class="odrs">
+      <div class="odr"><span class="ol">Seats</span><span class="ov mono">{{ draft.seats|join(', ') }}</span></div>
+      <div class="odr"><span class="ol">Base ({{ draft.seats|length }} × ₹{{ draft.price }})</span><span class="ov">₹{{ pricing.base }}</span></div>
+      <div class="odr"><span class="ol">Conv. Fee</span><span class="ov">₹{{ pricing.fee }}</span></div>
+      <div class="odr"><span class="ol">GST 18%</span><span class="ov">₹{{ pricing.gst }}</span></div>
+    </div>
+    <div class="bdiv"></div>
+    <div class="otot"><span>Total</span><span class="otv">₹{{ pricing.total }}</span></div>
+    <div class="sec-note">🔐 SSL Encrypted · Powered by AWS</div>
+  </div>
+</div>
+{% endblock %}

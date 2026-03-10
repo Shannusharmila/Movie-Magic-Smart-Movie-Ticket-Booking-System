@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Register — TamilTix{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">Tamil<span>Tix</span></div>
+    <h2>Create Account</h2>
+    <p class="auth-sub">Join TamilTix and start booking today</p>
+    <form method="POST" action="{{ url_for('register') }}">
+      <div class="fstack">
+        <div class="f"><label>Full Name</label><input type="text"     name="name"     required placeholder="Eg. Karthik Murugan"></div>
+        <div class="f"><label>Email</label><input     type="email"    name="email"    required placeholder="you@email.com"></div>
+        <div class="f"><label>Password</label><input  type="password" name="password" required placeholder="Min. 6 characters" minlength="6"></div>
+        <div class="f"><label>Mobile</label><input    type="tel"      name="mobile"   required placeholder="+91 98765 43210"></div>
+        <div class="f">
+          <label>City</label>
+          <select name="city" required>
+            <option value="">Select city</option>
+            <option>Chennai</option><option>Coimbatore</option><option>Madurai</option>
+            <option>Trichy</option><option>Salem</option><option>Tirunelveli</option>
+            <option>Tiruvannamalai</option><option>Vellore</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-red btn-full">Create Account →</button>
+      </div>
+    </form>
+    <div class="auth-sw">Already registered? <a href="{{ url_for('login') }}">Sign in</a></div>
+  </div>
+</div>
+{% endblock %}

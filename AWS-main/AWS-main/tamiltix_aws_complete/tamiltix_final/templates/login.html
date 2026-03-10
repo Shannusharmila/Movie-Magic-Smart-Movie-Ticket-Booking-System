@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Sign In — TamilTix{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">Tamil<span>Tix</span></div>
+    <h2>Welcome Back</h2>
+    <p class="auth-sub">Sign in to continue your cinema journey</p>
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="fstack">
+        <div class="f"><label>Email</label><input    type="email"    name="email"    required placeholder="you@email.com"></div>
+        <div class="f"><label>Password</label><input type="password" name="password" required placeholder="Your password"></div>
+        <button type="submit" class="btn btn-red btn-full">Sign In →</button>
+      </div>
+    </form>
+    <div class="auth-sw">New here? <a href="{{ url_for('register') }}">Create account</a></div>
+  </div>
+</div>
+{% endblock %}

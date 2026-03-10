@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Book {{ movie.name }} — TamilTix{% endblock %}
+{% block content %}
+<div class="bk-wrap">
+  <div class="bk-left">
+    <!-- Movie Strip -->
+    <div class="mstrip">
+      <div class="mstrip-img">
+        <img src="{{ movie.poster }}" data-fallback="{{ movie.poster_alt }}" alt="{{ movie.name }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="sfb" style="display:none">{{ movie.name[:2].upper() }}</div>
+      </div>
+      <div class="mstrip-info">
+        <h2>{{ movie.name }}</h2>
+        <div class="mstrip-meta">
+          <span>{{ movie.genre }}</span><span>{{ movie.lang }}</span>
+          <span>★ {{ movie.rating }}</span><span>{{ movie.duration }}</span>
+        </div>
+        <p class="mstrip-desc">{{ movie.desc }}</p>
+        <div class="mstrip-cast">🎬 {{ movie.cast }}</div>
+      </div>
+    </div>
+
+    <!-- Step 1: Theatre -->
+    <div class="step">
+      <div class="slbl"><div class="snum">1</div>Select Theatre</div>
+      <div class="th-list">
+        {% for t in movie.theaters %}
+        <div class="th {% if loop.first %}sel{% endif %}"
+             onclick="pickTheatre(this,'{{ t.name }}, {{ t.city }}')"
+             data-name="{{ t.name }}, {{ t.city }}">
+          <div>
+            <div class="th-name">{{ t.name }}</div>
+            <div class="th-city">{{ t.city }}</div>
+          </div>
+          <div>
+            <div class="th-dist">📍 {{ t.dist }}</div>
+            <div class="th-amen">{{ t.amen }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Step 2: Date -->
+    <div class="step">
+      <div class="slbl"><div class="snum">2</div>Choose Date</div>
+      <div class="dc-row" id="dc-row"></div>
+    </div>
+
+    <!-- Step 3: Showtime -->
+    <div class="step">
+      <div class="slbl"><div class="snum">3</div>Pick Showtime</div>
+      <div class="tc-row">
+        {% for t in showtimes %}
+        <div class="tc {% if loop.first %}sel{% endif %}"
+             onclick="pickTime(this,'{{ t }}')" data-time="{{ t }}">{{ t }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Step 4: Seats -->
+    <div class="step">
+      <div class="slbl"><div class="snum">4</div>Select Seats <span style="color:var(--sub);font-size:.75rem">(max 8)</span></div>
+      <div class="screen-bar"></div>
+      <div class="screen-lbl">— SCREEN THIS SIDE —</div>
+      <div class="smap-scroll"><div class="smap" id="smap"></div></div>
+      <div class="sleg">
+        <div class="sli"><div class="ld ld-av"></div>Available</div>
+        <div class="sli"><div class="ld ld-sel"></div>Selected</div>
+        <div class="sli"><div class="ld ld-occ"></div>Occupied</div>
+        <div class="sli"><div class="ld ld-pr"></div>Premium</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Booking Panel -->
+  <div class="bpanel">
+    <div class="bpt">YOUR BOOKING</div>
+    <div class="brow"><span class="bl">Film</span>     <span class="bv" id="p-film">{{ movie.name }}</span></div>
+    <div class="brow"><span class="bl">Theatre</span>  <span class="bv" id="p-th">—</span></div>
+    <div class="brow"><span class="bl">Date</span>     <span class="bv" id="p-dt">—</span></div>
+    <div class="brow"><span class="bl">Showtime</span> <span class="bv" id="p-tm">—</span></div>
+    <div class="brow"><span class="bl">Seats</span>    <span class="bv seats" id="p-seats"><span class="nseat">None</span></span></div>
+    <div class="bdiv"></div>
+    <div class="bbd">
+      <div class="bbi"><span>Tickets × <span id="p-sc">0</span></span><span id="p-base">₹0</span></div>
+      <div class="bbi"><span>Conv. Fee</span><span id="p-fee">₹0</span></div>
+      <div class="bbi"><span>GST 18%</span><span id="p-gst">₹0</span></div>
+    </div>
+    <div class="bdiv"></div>
+    <div class="btot"><span>Total</span><span class="btv" id="p-tot">₹0</span></div>
+
+    <form method="POST" action="{{ url_for('checkout') }}" id="bkform">
+      <input type="hidden" name="movie_id"   value="{{ movie.id }}">
+      <input type="hidden" name="movie_name" value="{{ movie.name }}">
+      <input type="hidden" name="poster"     value="{{ movie.poster }}">
+      <input type="hidden" name="price"      value="{{ movie.price }}">
+      <input type="hidden" name="theater"    id="f-theater" value="">
+      <input type="hidden" name="show_date"  id="f-date"    value="">
+      <input type="hidden" name="show_time"  id="f-time"    value="{{ showtimes[0] }}">
+      <div id="seat-inputs"></div>
+      <div id="bk-err" class="alert aerr" style="display:none"></div>
+      <button type="button" class="btn btn-gold btn-full btn-lg" onclick="submitBk()" style="margin-top:16px">
+        Proceed to Payment →
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MOVIE_ID  = "{{ movie.id }}";
+const PRICE     = {{ movie.price }};
+const SHOWTIMES = {{ showtimes | tojson }};
+const ROWS      = ['A','B','C','D','E','F','G','H'];
+const COLS      = 12;
+const PREM      = ['A','B'];
+
+let selTh    = "{{ movie.theaters[0].name }}, {{ movie.theaters[0].city }}";
+let selDate  = null;
+let selTime  = SHOWTIMES[0];
+let selSeats = [];
+let occupied = [];
+
+// Build date chips
+function buildDates() {
+  const row  = document.getElementById('dc-row');
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MNS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const today= new Date();
+  row.innerHTML = '';
+  for (let i=0;i<7;i++) {
+    const d  = new Date(today); d.setDate(today.getDate()+i);
+    const ds = d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+    const el = document.createElement('div');
+    el.className = 'dc' + (i===0?' sel':'');
+    el.innerHTML = `<div class="dy">${DAYS[d.getDay()]}</div><div class="dn">${d.getDate()}</div><div class="dm">${MNS[d.getMonth()]}</div>`;
+    el.dataset.date = ds;
+    el.onclick = () => {
+      document.querySelectorAll('.dc').forEach(c=>c.classList.remove('sel'));
+      el.classList.add('sel');
+      selDate = ds;
+      document.getElementById('f-date').value = ds;
+      document.getElementById('p-dt').textContent = ds;
+      selSeats=[]; loadSeats();
+    };
+    if(i===0){ selDate=ds; document.getElementById('f-date').value=ds; document.getElementById('p-dt').textContent=ds; }
+    row.appendChild(el);
+  }
+}
+
+function pickTheatre(el,name) {
+  document.querySelectorAll('.th').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel');
+  selTh=name;
+  document.getElementById('f-theater').value=name;
+  document.getElementById('p-th').textContent=name;
+  selSeats=[]; loadSeats();
+}
+
+function pickTime(el,t) {
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  selTime=t;
+  document.getElementById('f-time').value=t;
+  document.getElementById('p-tm').textContent=t;
+  selSeats=[]; loadSeats();
+}
+
+// Fetch occupied seats from Flask API → DynamoDB
+async function loadSeats() {
+  try {
+    const r = await fetch(`/api/seats?movie_id=${MOVIE_ID}&theater=${encodeURIComponent(selTh)}&date=${encodeURIComponent(selDate)}&time=${encodeURIComponent(selTime)}`);
+    const d = await r.json();
+    occupied = d.occupied || [];
+  } catch(e) { occupied=[]; }
+  buildMap();
+}
+
+function buildMap() {
+  const map = document.getElementById('smap');
+  map.innerHTML = ROWS.map(r => {
+    const isPrem = PREM.includes(r);
+    return `<div class="srow">
+      <div class="rid">${r}</div>
+      ${Array.from({length:COLS},(_,i)=>{
+        const sid  = r+(i+1);
+        const occ  = occupied.includes(sid);
+        const sel  = selSeats.includes(sid);
+        return `<div class="s${isPrem?' pr':''}${occ?' occ':sel?' sel':''}" data-id="${sid}"
+                     ${occ?'':'onclick="toggleSeat(this)"'}>${i+1}</div>`;
+      }).join('')}
+      <div class="rid">${r}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSeat(el) {
+  const sid = el.dataset.id;
+  if(el.classList.contains('sel')) {
+    el.classList.remove('sel'); selSeats=selSeats.filter(s=>s!==sid);
+  } else {
+    if(selSeats.length>=8){alert('Max 8 seats per booking.');return;}
+    el.classList.add('sel'); selSeats.push(sid);
+  }
+  updatePanel();
+}
+
+function updatePanel() {
+  const base  = selSeats.length * PRICE;
+  const fee   = selSeats.length * 8;
+  const gst   = Math.round((base+fee)*0.18);
+  const total = base+fee+gst;
+  document.getElementById('p-sc').textContent   = selSeats.length;
+  document.getElementById('p-base').textContent = `₹${base}`;
+  document.getElementById('p-fee').textContent  = `₹${fee}`;
+  document.getElementById('p-gst').textContent  = `₹${gst}`;
+  document.getElementById('p-tot').textContent  = `₹${total}`;
+  const se = document.getElementById('p-seats');
+  se.innerHTML = selSeats.length
+    ? selSeats.map(s=>`<span class="spill">${s}</span>`).join('')
+    : '<span class="nseat">None</span>';
+  document.getElementById('seat-inputs').innerHTML =
+    selSeats.map(s=>`<input type="hidden" name="seats" value="${s}">`).join('');
+}
+
+function submitBk() {
+  if(!selDate)          return showErr('Please select a date.');
+  if(!selSeats.length)  return showErr('Please select at least one seat.');
+  if(!selTh)            return showErr('Please select a theatre.');
+  document.getElementById('bkform').submit();
+}
+
+function showErr(msg) {
+  const el=document.getElementById('bk-err');
+  el.textContent=msg; el.style.display='block';
+}
+
+// Init
+document.getElementById('f-theater').value = selTh;
+document.getElementById('p-th').textContent = selTh;
+document.getElementById('f-time').value = selTime;
+document.getElementById('p-tm').textContent = selTime;
+buildDates();
+loadSeats();
+</script>
+{% endblock %}
